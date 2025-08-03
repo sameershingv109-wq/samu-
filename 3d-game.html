@@ -8,10 +8,12 @@
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
-        #instructions {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: white; font-size: 24px; text-align: center;
+        #blocker {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); color: white;
+            display: flex; justify-content: center; align-items: center;
         }
+        #instructions { font-size: 24px; text-align: center; }
     </style>
 </head>
 <body>
@@ -21,13 +23,18 @@
     
     <main class="game-page-container">
         <h2>My 3D Game</h2>
-        <div id="instructions">
-            <p>Phone ko tilt karke look around karein.</p>
+        <div id="blocker">
+            <div id="instructions">
+                <p>Click to play</p>
+                <p>WASD keys = move, Mouse = look around (PC)</p>
+                <p>Phone ko tilt karke look around karein (Mobile)</p>
+            </div>
         </div>
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/DeviceOrientationControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/objects/Sky.js"></script>
 
@@ -76,7 +83,6 @@
         directionalLight.shadow.mapSize.height = 2048;
         scene.add(directionalLight);
 
-        // Obstacles
         const cube1Geometry = new THREE.BoxGeometry(2, 2, 2);
         const cube1Material = new THREE.MeshStandardMaterial({ color: 0xff0000 });
         const cube1 = new THREE.Mesh(cube1Geometry, cube1Material);
@@ -98,7 +104,6 @@
         cube2.castShadow = true;
         scene.add(cube2);
 
-        // Goal
         const goalGeometry = new THREE.CylinderGeometry(2, 2, 5, 32);
         const goalMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00 });
         const goal = new THREE.Mesh(goalGeometry, goalMaterial);
@@ -118,10 +123,22 @@
             console.error(error);
         });
 
-        // --- Yahan Mobile Controls Add kiye gaye hain ---
-        const controls = new THREE.DeviceOrientationControls(camera);
-        document.getElementById('instructions').style.display = 'none';
-        
+        // --- Yahan PC ya Mobile ke hisab se controls set honge ---
+        let controls;
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        if (isMobile) {
+            controls = new THREE.DeviceOrientationControls(camera);
+            document.getElementById('blocker').style.display = 'none';
+        } else {
+            controls = new THREE.PointerLockControls(camera, document.body);
+            const blocker = document.getElementById('blocker');
+            const instructions = document.getElementById('instructions');
+            instructions.addEventListener('click', () => controls.lock());
+            controls.addEventListener('lock', () => blocker.style.display = 'none');
+            controls.addEventListener('unlock', () => blocker.style.display = 'flex');
+        }
+
         camera.position.set(0, 1.6, 15);
 
         let keys = {};
@@ -130,7 +147,6 @@
 
         function animate() {
             requestAnimationFrame(animate);
-            controls.update(); // Mobile orientation controls ko update karein
 
             if (playerModel) {
                 const moveSpeed = 0.5;
@@ -157,6 +173,15 @@
                     alert("You Win! Game Over.");
                 }
             }
+
+            // Controls ko update karein, PC aur Mobile ke hisaab se
+            if (controls instanceof THREE.DeviceOrientationControls) {
+                controls.update();
+            } else if (controls.isLocked) {
+                // PointerLockControls ka update logic yahan reh sakta hai, lekin
+                // camera movement animate loop mein nahi hota, woh PointerLockControls khud handle karta hai.
+            }
+            
             renderer.render(scene, camera);
         }
         animate();
