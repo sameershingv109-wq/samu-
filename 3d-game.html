@@ -152,7 +152,6 @@
         let keys = {};
         document.addEventListener('keydown', (event) => {
             keys[event.key.toLowerCase()] = true;
-            console.log("Key pressed:", event.key.toLowerCase()); // Debugging line
         });
         document.addEventListener('keyup', (event) => keys[event.key.toLowerCase()] = false);
 
@@ -189,19 +188,14 @@
                 right.normalize();
 
                 tempPlayerPosition.copy(playerModel.position);
-                const oldPosition = playerModel.position.clone();
 
                 if (keys['w']) tempPlayerPosition.addScaledVector(forward, moveSpeed);
                 if (keys['s']) tempPlayerPosition.addScaledVector(forward, -moveSpeed);
                 if (keys['a']) tempPlayerPosition.addScaledVector(right, -moveSpeed);
                 if (keys['d']) tempPlayerPosition.addScaledVector(right, moveSpeed);
 
-                // --- Yahan chota sa change kiya gaya hai ---
                 if (!checkCollision(tempPlayerPosition)) {
                     playerModel.position.copy(tempPlayerPosition);
-                } else {
-                    console.log("Collision detected!"); // Debugging line
-                    playerModel.position.copy(oldPosition);
                 }
 
                 camera.position.x = playerModel.position.x;
