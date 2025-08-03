@@ -34,6 +34,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/DeviceOrientationControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/objects/Sky.js"></script>
 
@@ -124,39 +125,35 @@
             playerModel = gltf.scene;
             playerModel.scale.set(1, 1, 1);
             playerModel.position.y = 0;
-            // --- Yahan player ki position change ki hai, ab woh open space mein spawn hoga ---
+            // --- Player ki position ek open space mein set ki gayi hai ---
             playerModel.position.set(-15, 0, -15);
             playerModel.castShadow = true;
             scene.add(playerModel);
         }, undefined, function (error) {
             console.error(error);
         });
-        
-        let controlsEnabled = false;
-        const blocker = document.getElementById('blocker');
-        const instructions = document.getElementById('instructions');
-        instructions.addEventListener('click', () => {
-            controlsEnabled = true;
-            blocker.style.display = 'none';
-        });
 
-        camera.position.set(-15, 1.6, -15);
+        let controls;
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        if (isMobile) {
+            controls = new THREE.DeviceOrientationControls(camera);
+            document.getElementById('blocker').style.display = 'none';
+        } else {
+            controls = new THREE.PointerLockControls(camera, document.body);
+            const blocker = document.getElementById('blocker');
+            const instructions = document.getElementById('instructions');
+            instructions.addEventListener('click', () => controls.lock());
+            controls.addEventListener('lock', () => blocker.style.display = 'none');
+            controls.addEventListener('unlock', () => blocker.style.display = 'flex');
+        }
         
-        // --- Simplified controls code as before ---
+        // --- Yahan camera ki position player ke saath set ki gayi hai ---
+        camera.position.set(-15, 1.6, -15);
+
         let keys = {};
         document.addEventListener('keydown', (event) => keys[event.key.toLowerCase()] = true);
         document.addEventListener('keyup', (event) => keys[event.key.toLowerCase()] = false);
-
-        let rotationX = 0;
-        let rotationY = 0;
-        document.addEventListener('mousemove', (event) => {
-            if (controlsEnabled) {
-                const sensitivity = 0.002;
-                rotationY -= event.movementX * sensitivity;
-                rotationX -= event.movementY * sensitivity;
-                rotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotationX));
-            }
-        });
 
         const playerBoundingBox = new THREE.Box3();
         const playerSize = new THREE.Vector3(1, 2, 1);
@@ -179,23 +176,21 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            if (playerModel && controlsEnabled) {
+            if (playerModel && controls.isLocked) {
                 const moveSpeed = 0.5;
-                const forward = new THREE.Vector3(
-                    Math.sin(rotationY),
-                    0,
-                    Math.cos(rotationY)
-                );
-                const right = new THREE.Vector3(
-                    Math.cos(rotationY),
-                    0,
-                    -Math.sin(rotationY)
-                );
+                const forward = new THREE.Vector3();
+                const right = new THREE.Vector3();
+                camera.getWorldDirection(forward);
+                forward.y = 0;
+                forward.normalize();
+                right.crossVectors(forward, camera.up);
+                right.y = 0;
+                right.normalize();
 
                 tempPlayerPosition.copy(playerModel.position);
 
-                if (keys['w']) tempPlayerPosition.addScaledVector(forward, -moveSpeed);
-                if (keys['s']) tempPlayerPosition.addScaledVector(forward, moveSpeed);
+                if (keys['w']) tempPlayerPosition.addScaledVector(forward, moveSpeed);
+                if (keys['s']) tempPlayerPosition.addScaledVector(forward, -moveSpeed);
                 if (keys['a']) tempPlayerPosition.addScaledVector(right, -moveSpeed);
                 if (keys['d']) tempPlayerPosition.addScaledVector(right, moveSpeed);
 
@@ -206,10 +201,10 @@
                 camera.position.x = playerModel.position.x;
                 camera.position.z = playerModel.position.z;
                 camera.position.y = playerModel.position.y + 1.6;
+            }
 
-                camera.rotation.order = 'YXZ';
-                camera.rotation.y = rotationY;
-                camera.rotation.x = rotationX;
+            if (isMobile) {
+                controls.update();
             }
             
             renderer.render(scene, camera);
