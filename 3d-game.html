@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>My First 3D Game</title>
+    <title>My 3D Maze Game</title>
     <link rel="stylesheet" href="style.css">
     <style>
         body { margin: 0; overflow: hidden; }
@@ -22,7 +22,7 @@
     </header>
     
     <main class="game-page-container">
-        <h2>My 3D Game</h2>
+        <h2>My 3D Maze Game</h2>
         <div id="blocker">
             <div id="instructions">
                 <p>Click to play</p>
@@ -67,8 +67,15 @@
         sun.setFromSphericalCoords(1, phi, theta);
         uniforms['sunPosition'].value.copy(sun);
 
+        // --- Naya Code: Grass Texture Loader ---
+        const textureLoader = new THREE.TextureLoader();
+        const grassTexture = textureLoader.load('https://threejs.org/examples/textures/crate.gif'); // Example texture
+        grassTexture.wrapS = THREE.RepeatWrapping;
+        grassTexture.wrapT = THREE.RepeatWrapping;
+        grassTexture.repeat.set(50, 50);
+
         const groundGeometry = new THREE.PlaneGeometry(200, 200);
-        const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x555555 });
+        const groundMaterial = new THREE.MeshStandardMaterial({ map: grassTexture });
         const ground = new THREE.Mesh(groundGeometry, groundMaterial);
         ground.rotation.x = -Math.PI / 2;
         ground.receiveShadow = true;
@@ -83,33 +90,39 @@
         directionalLight.shadow.mapSize.height = 2048;
         scene.add(directionalLight);
 
-        const cube1Geometry = new THREE.BoxGeometry(2, 2, 2);
-        const cube1Material = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-        const cube1 = new THREE.Mesh(cube1Geometry, cube1Material);
-        cube1.position.set(10, 1, -10);
-        cube1.castShadow = true;
-        scene.add(cube1);
+        // --- Naya Code: Maze Banane ka Function ---
+        const mazeSize = 40;
+        const wallHeight = 5;
+        const mazeWalls = [];
 
-        const sphere1Geometry = new THREE.SphereGeometry(1.5, 32, 32);
-        const sphere1Material = new THREE.MeshStandardMaterial({ color: 0x0000ff });
-        const sphere1 = new THREE.Mesh(sphere1Geometry, sphere1Material);
-        sphere1.position.set(-15, 1.5, 20);
-        sphere1.castShadow = true;
-        scene.add(sphere1);
+        function createWall(x, z, width = 10, depth = 1) {
+            const wallGeometry = new THREE.BoxGeometry(width, wallHeight, depth);
+            const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x558B2F }); // Dark Green color
+            const wall = new THREE.Mesh(wallGeometry, wallMaterial);
+            wall.position.set(x, wallHeight / 2, z);
+            wall.castShadow = true;
+            wall.receiveShadow = true;
+            scene.add(wall);
+            mazeWalls.push(wall);
+        }
+
+        function createMaze() {
+            // Boundary walls
+            createWall(0, -mazeSize / 2, mazeSize, 1);
+            createWall(0, mazeSize / 2, mazeSize, 1);
+            createWall(-mazeSize / 2, 0, 1, mazeSize);
+            createWall(mazeSize / 2, 0, 1, mazeSize);
+
+            // Inner walls
+            createWall(-10, -10, 1, 20);
+            createWall(10, 10, 1, 20);
+            createWall(0, 0, 10, 1);
+            createWall(-15, 15, 10, 1);
+            createWall(15, -15, 10, 1);
+        }
+        createMaze();
         
-        const cube2Geometry = new THREE.BoxGeometry(3, 5, 3);
-        const cube2Material = new THREE.MeshStandardMaterial({ color: 0x808000 });
-        const cube2 = new THREE.Mesh(cube2Geometry, cube2Material);
-        cube2.position.set(0, 2.5, -30);
-        cube2.castShadow = true;
-        scene.add(cube2);
-
-        const goalGeometry = new THREE.CylinderGeometry(2, 2, 5, 32);
-        const goalMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00 });
-        const goal = new THREE.Mesh(goalGeometry, goalMaterial);
-        goal.position.set(30, 2.5, -40);
-        goal.castShadow = true;
-        scene.add(goal);
+        // Old Obstacles removed, will be added later as points
 
         let playerModel;
         const loader = new THREE.GLTFLoader();
@@ -123,7 +136,7 @@
             console.error(error);
         });
 
-        // --- Yahan PC ya Mobile ke hisab se controls set honge ---
+        // PC aur Mobile ke hisab se controls set honge
         let controls;
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -168,18 +181,11 @@
                 camera.position.z = playerModel.position.z;
                 camera.position.y = playerModel.position.y + 1.6;
 
-                const distanceToGoal = playerModel.position.distanceTo(goal.position);
-                if (distanceToGoal < 5) {
-                    alert("You Win! Game Over.");
-                }
+                // Old goal logic removed, will be added back later
             }
 
-            // Controls ko update karein, PC aur Mobile ke hisaab se
             if (controls instanceof THREE.DeviceOrientationControls) {
                 controls.update();
-            } else if (controls.isLocked) {
-                // PointerLockControls ka update logic yahan reh sakta hai, lekin
-                // camera movement animate loop mein nahi hota, woh PointerLockControls khud handle karta hai.
             }
             
             renderer.render(scene, camera);
