@@ -114,27 +114,30 @@
         }
 
         function createMaze() {
+            // Border walls
             createWall(0, -mazeSize / 2, mazeSize, 1);
             createWall(0, mazeSize / 2, mazeSize, 1);
             createWall(-mazeSize / 2, 0, 1, mazeSize);
             createWall(mazeSize / 2, 0, 1, mazeSize);
             
-            createWall(-30, -30, 1, 40);
-            createWall(30, 30, 1, 40);
+            // --- Naya Maze Layout ---
+            createWall(-40, -40, 40, 1);
+            createWall(40, -40, 40, 1);
+            createWall(-20, -20, 1, 40);
+            createWall(20, -20, 1, 40);
             createWall(0, 0, 20, 1);
-            createWall(-40, 40, 20, 1);
-            createWall(40, -40, 20, 1);
-            createWall(-50, 0, 1, 60);
-            createWall(0, 50, 60, 1);
-            createWall(40, -20, 1, 40);
-            createWall(-20, -10, 40, 1);
-            createWall(20, 10, 40, 1);
-            createWall(-10, 20, 1, 20);
-            createWall(10, -20, 1, 20);
-            createWall(-40, -40, 20, 1);
-            createWall(40, 40, 20, 1);
-            createWall(-40, 20, 1, 20);
-            createWall(40, -20, 1, 20);
+            createWall(-30, 20, 40, 1);
+            createWall(30, 20, 40, 1);
+            createWall(-10, -30, 1, 20);
+            createWall(10, -30, 1, 20);
+            createWall(-30, 40, 1, 20);
+            createWall(30, 40, 1, 20);
+            createWall(-10, 40, 10, 1);
+            createWall(10, -10, 10, 1);
+            createWall(0, 30, 1, 20);
+            createWall(0, -30, 1, 20);
+            createWall(-40, 0, 1, 40);
+            createWall(40, 0, 1, 40);
         }
         createMaze();
 
@@ -174,11 +177,11 @@
 
         const coins = [];
         const coinLocations = [
-            {x: -40, z: -40}, {x: -20, z: -40}, {x: 0, z: -40}, {x: 20, z: -40}, {x: 40, z: -40},
-            {x: -40, z: -20}, {x: -20, z: -20}, {x: 0, z: -20}, {x: 20, z: -20}, {x: 40, z: -20},
-            {x: -40, z: 0}, {x: -20, z: 0}, {x: 0, z: 0}, {x: 20, z: 0}, {x: 40, z: 0},
-            {x: -40, z: 20}, {x: -20, z: 20}, {x: 0, z: 20}, {x: 20, z: 20}, {x: 40, z: 20},
-            {x: -40, z: 40}, {x: -20, z: 40}, {x: 0, z: 40}, {x: 20, z: 40}, {x: 40, z: 40}
+            {x: -45, z: -45}, {x: -25, z: -45}, {x: 5, z: -45}, {x: 25, z: -45}, {x: 45, z: -45},
+            {x: -45, z: -25}, {x: -5, z: -25}, {x: 25, z: -25}, {x: 45, z: -25},
+            {x: -45, z: 5}, {x: -25, z: 5}, {x: 5, z: 5}, {x: 25, z: 5}, {x: 45, z: 5},
+            {x: -45, z: 25}, {x: -5, z: 25}, {x: 25, z: 25}, {x: 45, z: 25},
+            {x: -45, z: 45}, {x: -25, z: 45}, {x: 5, z: 45}, {x: 25, z: 45}, {x: 45, z: 45},
         ];
 
         const coinGeometry = new THREE.TorusGeometry(0.5, 0.2, 16, 100);
