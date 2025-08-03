@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>My 3D Game</title>
+    <link rel="stylesheet" href="style.css">
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
@@ -13,6 +14,16 @@
             display: flex; justify-content: center; align-items: center;
         }
         #instructions { font-size: 24px; text-align: center; }
+        #score-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            color: #fff;
+            background-color: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -22,36 +33,119 @@
             <p>WASD keys = move, Mouse = look around (PC)</p>
         </div>
     </div>
+    <div id="score-container">Score: <span id="score">0</span></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/objects/Sky.js"></script>
     <script>
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(renderer.domElement);
 
-        const light = new THREE.AmbientLight(0x404040, 5);
-        scene.add(light);
+        const sky = new THREE.Sky();
+        sky.scale.setScalar(450000);
+        scene.add(sky);
+        const sun = new THREE.Vector3();
+        const effectController = {
+            turbidity: 10, rayleigh: 3, mieCoefficient: 0.005,
+            mieDirectionalG: 0.7, elevation: 2, azimuth: 180,
+            exposure: renderer.toneMappingExposure
+        };
+        const uniforms = sky.material.uniforms;
+        uniforms['turbidity'].value = effectController.turbidity;
+        uniforms['rayleigh'].value = effectController.rayleigh;
+        uniforms['mieCoefficient'].value = effectController.mieCoefficient;
+        uniforms['mieDirectionalG'].value = effectController.mieDirectionalG;
+        const phi = THREE.MathUtils.degToRad(90 - effectController.elevation);
+        const theta = THREE.MathUtils.degToRad(effectController.azimuth);
+        sun.setFromSphericalCoords(1, phi, theta);
+        uniforms['sunPosition'].value.copy(sun);
+
+        const textureLoader = new THREE.TextureLoader();
+        const grassTexture = textureLoader.load('https://threejs.org/examples/textures/crate.gif');
+        grassTexture.wrapS = THREE.RepeatWrapping;
+        grassTexture.wrapT = THREE.RepeatWrapping;
+        grassTexture.repeat.set(50, 50);
+
+        const groundGeometry = new THREE.PlaneGeometry(200, 200);
+        const groundMaterial = new THREE.MeshStandardMaterial({ map: grassTexture });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
         const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
         directionalLight.position.set(50, 50, 50);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.width = 2048;
+        directionalLight.shadow.mapSize.height = 2048;
         scene.add(directionalLight);
 
-        const ground = new THREE.Mesh(
-            new THREE.PlaneGeometry(100, 100),
-            new THREE.MeshStandardMaterial({ color: 0xffffff })
-        );
-        ground.rotation.x = -Math.PI / 2;
-        scene.add(ground);
+        const mazeSize = 100;
+        const wallHeight = 5;
+        
+        const brickTexture = textureLoader.load('https://threejs.org/examples/textures/brick_diffuse.jpg');
+        brickTexture.wrapS = THREE.RepeatWrapping;
+        brickTexture.wrapT = THREE.RepeatWrapping;
+        brickTexture.repeat.set(5, 1); 
+        const wallMaterial = new THREE.MeshStandardMaterial({ map: brickTexture });
+        
+        const mazeWalls = [];
+
+        function createWall(x, z, width = 10, depth = 1) {
+            const wall = new THREE.Mesh(
+                new THREE.BoxGeometry(width, wallHeight, depth),
+                wallMaterial
+            );
+            wall.position.set(x, wallHeight / 2, z);
+            wall.castShadow = true;
+            wall.receiveShadow = true;
+            scene.add(wall);
+            mazeWalls.push(wall);
+        }
+
+        function createMaze() {
+            createWall(0, -mazeSize / 2, mazeSize, 1);
+            createWall(0, mazeSize / 2, mazeSize, 1);
+            createWall(-mazeSize / 2, 0, 1, mazeSize);
+            createWall(mazeSize / 2, 0, 1, mazeSize);
+            
+            createWall(-30, -30, 1, 40);
+            createWall(30, 30, 1, 40);
+            createWall(0, 0, 20, 1);
+            createWall(-40, 40, 20, 1);
+            createWall(40, -40, 20, 1);
+            createWall(-50, 0, 1, 60);
+            createWall(0, 50, 60, 1);
+            createWall(40, -20, 1, 40);
+            createWall(-20, -10, 40, 1);
+            createWall(20, 10, 40, 1);
+            createWall(-10, 20, 1, 20);
+            createWall(10, -20, 1, 20);
+            createWall(-40, -40, 20, 1);
+            createWall(40, 40, 20, 1);
+            createWall(-40, 20, 1, 20);
+            createWall(40, -20, 1, 20);
+        }
+        createMaze();
 
         let playerModel;
         const loader = new THREE.GLTFLoader();
         loader.load('https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb', function (gltf) {
             playerModel = gltf.scene;
-            playerModel.position.set(0, 0, 0);
             playerModel.scale.set(1, 1, 1);
+            playerModel.position.y = 0;
+            playerModel.position.set(-45, 0, -45);
+            playerModel.castShadow = true;
             scene.add(playerModel);
         }, undefined, function (error) {
             console.error(error);
@@ -64,11 +158,72 @@
         controls.addEventListener('lock', () => blocker.style.display = 'none');
         controls.addEventListener('unlock', () => blocker.style.display = 'flex');
 
-        camera.position.set(0, 1.6, 0);
+        camera.position.set(-45, 1.6, -45);
 
         let keys = {};
         document.addEventListener('keydown', (event) => keys[event.key.toLowerCase()] = true);
         document.addEventListener('keyup', (event) => keys[event.key.toLowerCase()] = false);
+
+        const playerBoundingBox = new THREE.Box3();
+        const playerSize = new THREE.Vector3(1, 2, 1);
+        const tempPlayerPosition = new THREE.Vector3();
+        const wallBoundingBoxes = mazeWalls.map(wall => new THREE.Box3().setFromObject(wall));
+        
+        let score = 0;
+        const scoreElement = document.getElementById('score');
+
+        const coins = [];
+        const coinLocations = [
+            {x: -40, z: -40}, {x: -20, z: -40}, {x: 0, z: -40}, {x: 20, z: -40}, {x: 40, z: -40},
+            {x: -40, z: -20}, {x: -20, z: -20}, {x: 0, z: -20}, {x: 20, z: -20}, {x: 40, z: -20},
+            {x: -40, z: 0}, {x: -20, z: 0}, {x: 0, z: 0}, {x: 20, z: 0}, {x: 40, z: 0},
+            {x: -40, z: 20}, {x: -20, z: 20}, {x: 0, z: 20}, {x: 20, z: 20}, {x: 40, z: 20},
+            {x: -40, z: 40}, {x: -20, z: 40}, {x: 0, z: 40}, {x: 20, z: 40}, {x: 40, z: 40}
+        ];
+
+        const coinGeometry = new THREE.TorusGeometry(0.5, 0.2, 16, 100);
+        const coinMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00, emissive: 0xffff00 });
+
+        coinLocations.forEach(loc => {
+            const coin = new THREE.Mesh(coinGeometry, coinMaterial);
+            coin.position.set(loc.x, 0.5, loc.z);
+            coin.rotation.x = Math.PI / 2;
+            scene.add(coin);
+            coins.push(coin);
+        });
+
+        function checkCollision(position) {
+            playerBoundingBox.setFromCenterAndSize(
+                new THREE.Vector3(position.x, playerModel.position.y + 1, position.z),
+                playerSize
+            );
+            for (const wallBox of wallBoundingBoxes) {
+                if (playerBoundingBox.intersectsBox(wallBox)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function collectCoins() {
+            if (playerModel) {
+                const playerPos = playerModel.position;
+                for (let i = coins.length - 1; i >= 0; i--) {
+                    const coin = coins[i];
+                    if (playerPos.distanceTo(coin.position) < 1) {
+                        score++;
+                        scoreElement.textContent = score;
+                        scene.remove(coin);
+                        coins.splice(i, 1);
+                        
+                        if (coins.length === 0) {
+                            blocker.style.display = 'flex';
+                            instructions.innerHTML = "<h2>Congratulations! You collected all the coins!</h2><p>Refresh to play again.</p>";
+                        }
+                    }
+                }
+            }
+        }
 
         function animate() {
             requestAnimationFrame(animate);
@@ -84,10 +239,16 @@
                 right.y = 0;
                 right.normalize();
 
-                if (keys['w']) playerModel.position.addScaledVector(forward, moveSpeed);
-                if (keys['s']) playerModel.position.addScaledVector(forward, -moveSpeed);
-                if (keys['a']) playerModel.position.addScaledVector(right, -moveSpeed);
-                if (keys['d']) playerModel.position.addScaledVector(right, moveSpeed);
+                tempPlayerPosition.copy(playerModel.position);
+
+                if (keys['w']) tempPlayerPosition.addScaledVector(forward, moveSpeed);
+                if (keys['s']) tempPlayerPosition.addScaledVector(forward, -moveSpeed);
+                if (keys['a']) tempPlayerPosition.addScaledVector(right, -moveSpeed);
+                if (keys['d']) tempPlayerPosition.addScaledVector(right, moveSpeed);
+
+                if (!checkCollision(tempPlayerPosition)) {
+                    playerModel.position.copy(tempPlayerPosition);
+                }
 
                 camera.position.x = playerModel.position.x;
                 camera.position.z = playerModel.position.z;
@@ -95,6 +256,8 @@
 
                 playerModel.rotation.y = camera.rotation.y;
             }
+
+            collectCoins();
             
             renderer.render(scene, camera);
         }
