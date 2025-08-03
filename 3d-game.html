@@ -124,7 +124,8 @@
             playerModel = gltf.scene;
             playerModel.scale.set(1, 1, 1);
             playerModel.position.y = 0;
-            playerModel.position.set(-15, 0, 15);
+            // --- Yahan player ki position change ki hai, ab woh open space mein spawn hoga ---
+            playerModel.position.set(-15, 0, -15);
             playerModel.castShadow = true;
             scene.add(playerModel);
         }, undefined, function (error) {
@@ -139,9 +140,9 @@
             blocker.style.display = 'none';
         });
 
-        camera.position.set(-15, 1.6, 15);
+        camera.position.set(-15, 1.6, -15);
         
-        // --- Naya Code: Mouse aur keyboard events ko seedhe handle kiya gaya hai ---
+        // --- Simplified controls code as before ---
         let keys = {};
         document.addEventListener('keydown', (event) => keys[event.key.toLowerCase()] = true);
         document.addEventListener('keyup', (event) => keys[event.key.toLowerCase()] = false);
@@ -153,7 +154,7 @@
                 const sensitivity = 0.002;
                 rotationY -= event.movementX * sensitivity;
                 rotationX -= event.movementY * sensitivity;
-                rotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotationX)); // Limit up/down
+                rotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotationX));
             }
         });
 
@@ -206,7 +207,7 @@
                 camera.position.z = playerModel.position.z;
                 camera.position.y = playerModel.position.y + 1.6;
 
-                camera.rotation.order = 'YXZ'; // Ensure correct rotation order
+                camera.rotation.order = 'YXZ';
                 camera.rotation.y = rotationY;
                 camera.rotation.x = rotationX;
             }
