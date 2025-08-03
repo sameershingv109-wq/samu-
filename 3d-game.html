@@ -125,7 +125,6 @@
             playerModel = gltf.scene;
             playerModel.scale.set(1, 1, 1);
             playerModel.position.y = 0;
-            // --- Player ki position ek open space mein set ki gayi hai ---
             playerModel.position.set(-15, 0, -15);
             playerModel.castShadow = true;
             scene.add(playerModel);
@@ -148,7 +147,6 @@
             controls.addEventListener('unlock', () => blocker.style.display = 'flex');
         }
         
-        // --- Yahan camera ki position player ke saath set ki gayi hai ---
         camera.position.set(-15, 1.6, -15);
 
         let keys = {};
@@ -201,6 +199,9 @@
                 camera.position.x = playerModel.position.x;
                 camera.position.z = playerModel.position.z;
                 camera.position.y = playerModel.position.y + 1.6;
+
+                // --- Yahan player ko camera ki y-axis rotation se rotate kiya gaya hai ---
+                playerModel.rotation.y = camera.rotation.y;
             }
 
             if (isMobile) {
