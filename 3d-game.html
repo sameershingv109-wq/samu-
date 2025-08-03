@@ -68,7 +68,7 @@
         uniforms['sunPosition'].value.copy(sun);
 
         const textureLoader = new THREE.TextureLoader();
-        const grassTexture = textureLoader.load('https://threejs.org/examples/textures/crate.gif'); // Example texture
+        const grassTexture = textureLoader.load('https://threejs.org/examples/textures/crate.gif');
         grassTexture.wrapS = THREE.RepeatWrapping;
         grassTexture.wrapT = THREE.RepeatWrapping;
         grassTexture.repeat.set(50, 50);
@@ -92,7 +92,6 @@
         const mazeSize = 40;
         const wallHeight = 5;
         const mazeWalls = [];
-        const wallGeometry = new THREE.BoxGeometry(10, wallHeight, 1);
         const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x558B2F });
 
         function createWall(x, z, width = 10, depth = 1) {
@@ -126,10 +125,7 @@
             playerModel = gltf.scene;
             playerModel.scale.set(1, 1, 1);
             playerModel.position.y = 0;
-
-            // --- Yahan player ki starting position theek ki gayi hai ---
             playerModel.position.set(-15, 0, 15);
-
             playerModel.castShadow = true;
             scene.add(playerModel);
         }, undefined, function (error) {
@@ -150,29 +146,27 @@
             controls.addEventListener('lock', () => blocker.style.display = 'none');
             controls.addEventListener('unlock', () => blocker.style.display = 'flex');
         }
-
-        camera.position.set(0, 1.6, 15);
+        
+        // --- Yahan camera ki position player ke saath set ki gayi hai ---
+        camera.position.set(-15, 1.6, 15);
 
         let keys = {};
         document.addEventListener('keydown', (event) => keys[event.key.toLowerCase()] = true);
         document.addEventListener('keyup', (event) => keys[event.key.toLowerCase()] = false);
 
+        // --- Naya Code: Player Bounding Box ko behtar banaya gaya hai ---
         const playerBoundingBox = new THREE.Box3();
+        const playerSize = new THREE.Vector3(1, 2, 1); // Player ka fixed size
         const tempPlayerPosition = new THREE.Vector3();
-        const tempPlayerBox = new THREE.Box3();
+        const wallBoundingBoxes = mazeWalls.map(wall => new THREE.Box3().setFromObject(wall)); // Saare wall boxes pehle se bana liye
 
         function checkCollision(position) {
-            if (!playerModel) return false;
-            
-            tempPlayerBox.setFromObject(playerModel);
-            tempPlayerBox.min.x = position.x - 0.5;
-            tempPlayerBox.max.x = position.x + 0.5;
-            tempPlayerBox.min.z = position.z - 0.5;
-            tempPlayerBox.max.z = position.z + 0.5;
-
-            for (const wall of mazeWalls) {
-                const wallBoundingBox = new THREE.Box3().setFromObject(wall);
-                if (tempPlayerBox.intersectsBox(wallBoundingBox)) {
+            playerBoundingBox.setFromCenterAndSize(
+                new THREE.Vector3(position.x, playerModel.position.y + 1, position.z),
+                playerSize
+            );
+            for (const wallBox of wallBoundingBoxes) {
+                if (playerBoundingBox.intersectsBox(wallBox)) {
                     return true;
                 }
             }
