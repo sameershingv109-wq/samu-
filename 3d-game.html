@@ -2,18 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>My First 3D Game</title>
     <link rel="stylesheet" href="style.css">
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
-        #blocker {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.5); color: white;
-            display: flex; justify-content: center; align-items: center;
+        #instructions {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: white; font-size: 24px; text-align: center;
         }
-        #instructions { font-size: 24px; text-align: center; }
     </style>
 </head>
 <body>
@@ -23,17 +21,14 @@
     
     <main class="game-page-container">
         <h2>My 3D Game</h2>
-        <div id="blocker">
-            <div id="instructions">
-                <p>Click to play</p>
-                <p>WASD keys = move, Mouse = look around</p>
-            </div>
+        <div id="instructions">
+            <p>Phone ko tilt karke look around karein.</p>
         </div>
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/DeviceOrientationControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/objects/Sky.js"></script>
 
     <script>
@@ -103,11 +98,11 @@
         cube2.castShadow = true;
         scene.add(cube2);
 
-        // --- Yahan Hum Goal Add Kar Rahe Hain ---
+        // Goal
         const goalGeometry = new THREE.CylinderGeometry(2, 2, 5, 32);
         const goalMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00 });
         const goal = new THREE.Mesh(goalGeometry, goalMaterial);
-        goal.position.set(30, 2.5, -40); // Goal ko map par rakha
+        goal.position.set(30, 2.5, -40);
         goal.castShadow = true;
         scene.add(goal);
 
@@ -123,12 +118,10 @@
             console.error(error);
         });
 
-        const controls = new THREE.PointerLockControls(camera, document.body);
-        const blocker = document.getElementById('blocker');
-        const instructions = document.getElementById('instructions');
-        instructions.addEventListener('click', () => controls.lock());
-        controls.addEventListener('lock', () => blocker.style.display = 'none');
-        controls.addEventListener('unlock', () => blocker.style.display = 'flex');
+        // --- Yahan Mobile Controls Add kiye gaye hain ---
+        const controls = new THREE.DeviceOrientationControls(camera);
+        document.getElementById('instructions').style.display = 'none';
+        
         camera.position.set(0, 1.6, 15);
 
         let keys = {};
@@ -137,7 +130,9 @@
 
         function animate() {
             requestAnimationFrame(animate);
-            if (controls.isLocked && playerModel) {
+            controls.update(); // Mobile orientation controls ko update karein
+
+            if (playerModel) {
                 const moveSpeed = 0.5;
                 const forward = new THREE.Vector3();
                 const right = new THREE.Vector3();
@@ -157,9 +152,8 @@
                 camera.position.z = playerModel.position.z;
                 camera.position.y = playerModel.position.y + 1.6;
 
-                // --- Game Logic: Collision Detection ---
                 const distanceToGoal = playerModel.position.distanceTo(goal.position);
-                if (distanceToGoal < 5) { // Agar player goal ke 5 units ke andar hai
+                if (distanceToGoal < 5) {
                     alert("You Win! Game Over.");
                 }
             }
