@@ -102,8 +102,15 @@
 
         const mazeSize = 40;
         const wallHeight = 5;
+        
+        // --- Naya Code: Brick texture load kiya gaya hai ---
+        const brickTexture = textureLoader.load('https://threejs.org/examples/textures/brick_diffuse.jpg');
+        brickTexture.wrapS = THREE.RepeatWrapping;
+        brickTexture.wrapT = THREE.RepeatWrapping;
+        brickTexture.repeat.set(2, 1); 
+        const wallMaterial = new THREE.MeshStandardMaterial({ map: brickTexture });
+        
         const mazeWalls = [];
-        const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x558B2F });
 
         function createWall(x, z, width = 10, depth = 1) {
             const wall = new THREE.Mesh(
@@ -118,15 +125,27 @@
         }
 
         function createMaze() {
+            // Border walls
             createWall(0, -mazeSize / 2, mazeSize, 1);
             createWall(0, mazeSize / 2, mazeSize, 1);
             createWall(-mazeSize / 2, 0, 1, mazeSize);
             createWall(mazeSize / 2, 0, 1, mazeSize);
+            
+            // --- Naya Code: Maze ko aur lamba banaya gaya hai ---
             createWall(-10, -10, 1, 20);
             createWall(10, 10, 1, 20);
             createWall(0, 0, 10, 1);
             createWall(-15, 15, 10, 1);
             createWall(15, -15, 10, 1);
+            createWall(-15, 0, 1, 20);
+            createWall(0, 15, 20, 1);
+            createWall(10, -5, 1, 10);
+            createWall(-5, -2.5, 10, 1);
+            createWall(15, 5, 1, 10);
+            createWall(-20, -15, 20, 1);
+            createWall(-20, 15, 20, 1);
+            createWall(-30, 0, 1, 30);
+            createWall(30, 0, 1, 30);
         }
         createMaze();
 
@@ -172,18 +191,13 @@
         let score = 0;
         const scoreElement = document.getElementById('score');
 
-        // --- Naya Code: Coins ki list banayein ---
         const coins = [];
+        // --- Naya Code: Coin locations ko badhaya gaya hai ---
         const coinLocations = [
-            {x: -15, z: -10},
-            {x: -5, z: -10},
-            {x: 5, z: -10},
-            {x: -10, z: 0},
-            {x: 0, z: 0},
-            {x: 10, z: 0},
-            {x: -15, z: 10},
-            {x: 0, z: 10},
-            {x: 15, z: 10}
+            {x: -15, z: -10}, {x: -5, z: -10}, {x: 5, z: -10},
+            {x: -10, z: 0}, {x: 0, z: 0}, {x: 10, z: 0},
+            {x: -15, z: 10}, {x: 0, z: 10}, {x: 15, z: 10},
+            {x: -25, z: -10}, {x: -25, z: 10}, {x: 25, z: -10}, {x: 25, z: 10}
         ];
 
         const coinGeometry = new THREE.TorusGeometry(0.5, 0.2, 16, 100);
