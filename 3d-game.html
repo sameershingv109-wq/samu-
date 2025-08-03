@@ -100,14 +100,14 @@
         directionalLight.shadow.mapSize.height = 2048;
         scene.add(directionalLight);
 
-        const mazeSize = 40;
+        // --- Naya Code: Maze ka size badhaya gaya hai ---
+        const mazeSize = 60;
         const wallHeight = 5;
         
-        // --- Naya Code: Brick texture load kiya gaya hai ---
         const brickTexture = textureLoader.load('https://threejs.org/examples/textures/brick_diffuse.jpg');
         brickTexture.wrapS = THREE.RepeatWrapping;
         brickTexture.wrapT = THREE.RepeatWrapping;
-        brickTexture.repeat.set(2, 1); 
+        brickTexture.repeat.set(4, 1); // Repeat badhaya gaya hai
         const wallMaterial = new THREE.MeshStandardMaterial({ map: brickTexture });
         
         const mazeWalls = [];
@@ -132,20 +132,24 @@
             createWall(mazeSize / 2, 0, 1, mazeSize);
             
             // --- Naya Code: Maze ko aur lamba banaya gaya hai ---
-            createWall(-10, -10, 1, 20);
-            createWall(10, 10, 1, 20);
+            createWall(-20, -10, 1, 20);
+            createWall(20, 10, 1, 20);
             createWall(0, 0, 10, 1);
-            createWall(-15, 15, 10, 1);
-            createWall(15, -15, 10, 1);
+            createWall(-25, 15, 10, 1);
+            createWall(25, -15, 10, 1);
             createWall(-15, 0, 1, 20);
-            createWall(0, 15, 20, 1);
+            createWall(0, 25, 20, 1);
             createWall(10, -5, 1, 10);
             createWall(-5, -2.5, 10, 1);
             createWall(15, 5, 1, 10);
-            createWall(-20, -15, 20, 1);
-            createWall(-20, 15, 20, 1);
-            createWall(-30, 0, 1, 30);
-            createWall(30, 0, 1, 30);
+            createWall(-30, -15, 20, 1);
+            createWall(-30, 15, 20, 1);
+            createWall(-10, -25, 30, 1);
+            createWall(10, 25, 30, 1);
+            createWall(20, -25, 1, 10);
+            createWall(20, 25, 1, 10);
+            createWall(-20, -25, 1, 10);
+            createWall(-20, 25, 1, 10);
         }
         createMaze();
 
@@ -155,7 +159,8 @@
             playerModel = gltf.scene;
             playerModel.scale.set(1, 1, 1);
             playerModel.position.y = 0;
-            playerModel.position.set(-15, 0, -15);
+            // Player ki position naye maze ke hisab se set ki gayi hai
+            playerModel.position.set(-25, 0, -25);
             playerModel.castShadow = true;
             scene.add(playerModel);
         }, undefined, function (error) {
@@ -177,7 +182,7 @@
             controls.addEventListener('unlock', () => blocker.style.display = 'flex');
         }
         
-        camera.position.set(-15, 1.6, -15);
+        camera.position.set(-25, 1.6, -25);
 
         let keys = {};
         document.addEventListener('keydown', (event) => keys[event.key.toLowerCase()] = true);
@@ -192,12 +197,13 @@
         const scoreElement = document.getElementById('score');
 
         const coins = [];
-        // --- Naya Code: Coin locations ko badhaya gaya hai ---
+        // --- Naya Code: Coins ko badhe hue maze ke hisab se daala gaya hai ---
         const coinLocations = [
-            {x: -15, z: -10}, {x: -5, z: -10}, {x: 5, z: -10},
-            {x: -10, z: 0}, {x: 0, z: 0}, {x: 10, z: 0},
-            {x: -15, z: 10}, {x: 0, z: 10}, {x: 15, z: 10},
-            {x: -25, z: -10}, {x: -25, z: 10}, {x: 25, z: -10}, {x: 25, z: 10}
+            {x: -25, z: -15}, {x: -10, z: -15}, {x: 0, z: -15}, {x: 10, z: -15}, {x: 25, z: -15},
+            {x: -15, z: -5}, {x: 5, z: -5}, {x: 15, z: -5}, {x: 25, z: -5},
+            {x: -10, z: 5}, {x: 10, z: 5}, {x: 20, z: 5}, {x: 25, z: 5},
+            {x: -25, z: 15}, {x: -15, z: 15}, {x: 0, z: 15}, {x: 15, z: 15},
+            {x: -25, z: 25}, {x: -5, z: 25}, {x: 10, z: 25}, {x: 25, z: 25},
         ];
 
         const coinGeometry = new THREE.TorusGeometry(0.5, 0.2, 16, 100);
