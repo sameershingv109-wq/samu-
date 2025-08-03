@@ -126,6 +126,10 @@
             playerModel = gltf.scene;
             playerModel.scale.set(1, 1, 1);
             playerModel.position.y = 0;
+
+            // --- Yahan player ki starting position theek ki gayi hai ---
+            playerModel.position.set(-15, 0, 15);
+
             playerModel.castShadow = true;
             scene.add(playerModel);
         }, undefined, function (error) {
@@ -153,7 +157,6 @@
         document.addEventListener('keydown', (event) => keys[event.key.toLowerCase()] = true);
         document.addEventListener('keyup', (event) => keys[event.key.toLowerCase()] = false);
 
-        // --- Naya Code: Collision Detection ---
         const playerBoundingBox = new THREE.Box3();
         const tempPlayerPosition = new THREE.Vector3();
         const tempPlayerBox = new THREE.Box3();
@@ -197,7 +200,6 @@
                 if (keys['a']) tempPlayerPosition.addScaledVector(right, -moveSpeed);
                 if (keys['d']) tempPlayerPosition.addScaledVector(right, moveSpeed);
 
-                // Movement sirf tab hoga jab collision nahi hogi
                 if (!checkCollision(tempPlayerPosition)) {
                     playerModel.position.copy(tempPlayerPosition);
                 }
