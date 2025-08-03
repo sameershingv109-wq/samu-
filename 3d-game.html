@@ -67,7 +67,6 @@
         sun.setFromSphericalCoords(1, phi, theta);
         uniforms['sunPosition'].value.copy(sun);
 
-        // --- Naya Code: Grass Texture Loader ---
         const textureLoader = new THREE.TextureLoader();
         const grassTexture = textureLoader.load('https://threejs.org/examples/textures/crate.gif'); // Example texture
         grassTexture.wrapS = THREE.RepeatWrapping;
@@ -90,15 +89,17 @@
         directionalLight.shadow.mapSize.height = 2048;
         scene.add(directionalLight);
 
-        // --- Naya Code: Maze Banane ka Function ---
         const mazeSize = 40;
         const wallHeight = 5;
         const mazeWalls = [];
+        const wallGeometry = new THREE.BoxGeometry(10, wallHeight, 1);
+        const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x558B2F });
 
         function createWall(x, z, width = 10, depth = 1) {
-            const wallGeometry = new THREE.BoxGeometry(width, wallHeight, depth);
-            const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x558B2F }); // Dark Green color
-            const wall = new THREE.Mesh(wallGeometry, wallMaterial);
+            const wall = new THREE.Mesh(
+                new THREE.BoxGeometry(width, wallHeight, depth),
+                wallMaterial
+            );
             wall.position.set(x, wallHeight / 2, z);
             wall.castShadow = true;
             wall.receiveShadow = true;
@@ -107,13 +108,10 @@
         }
 
         function createMaze() {
-            // Boundary walls
             createWall(0, -mazeSize / 2, mazeSize, 1);
             createWall(0, mazeSize / 2, mazeSize, 1);
             createWall(-mazeSize / 2, 0, 1, mazeSize);
             createWall(mazeSize / 2, 0, 1, mazeSize);
-
-            // Inner walls
             createWall(-10, -10, 1, 20);
             createWall(10, 10, 1, 20);
             createWall(0, 0, 10, 1);
@@ -121,8 +119,6 @@
             createWall(15, -15, 10, 1);
         }
         createMaze();
-        
-        // Old Obstacles removed, will be added later as points
 
         let playerModel;
         const loader = new THREE.GLTFLoader();
@@ -136,7 +132,6 @@
             console.error(error);
         });
 
-        // PC aur Mobile ke hisab se controls set honge
         let controls;
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -158,6 +153,29 @@
         document.addEventListener('keydown', (event) => keys[event.key.toLowerCase()] = true);
         document.addEventListener('keyup', (event) => keys[event.key.toLowerCase()] = false);
 
+        // --- Naya Code: Collision Detection ---
+        const playerBoundingBox = new THREE.Box3();
+        const tempPlayerPosition = new THREE.Vector3();
+        const tempPlayerBox = new THREE.Box3();
+
+        function checkCollision(position) {
+            if (!playerModel) return false;
+            
+            tempPlayerBox.setFromObject(playerModel);
+            tempPlayerBox.min.x = position.x - 0.5;
+            tempPlayerBox.max.x = position.x + 0.5;
+            tempPlayerBox.min.z = position.z - 0.5;
+            tempPlayerBox.max.z = position.z + 0.5;
+
+            for (const wall of mazeWalls) {
+                const wallBoundingBox = new THREE.Box3().setFromObject(wall);
+                if (tempPlayerBox.intersectsBox(wallBoundingBox)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         function animate() {
             requestAnimationFrame(animate);
 
@@ -172,16 +190,21 @@
                 right.y = 0;
                 right.normalize();
 
-                if (keys['w']) playerModel.position.addScaledVector(forward, moveSpeed);
-                if (keys['s']) playerModel.position.addScaledVector(forward, -moveSpeed);
-                if (keys['a']) playerModel.position.addScaledVector(right, -moveSpeed);
-                if (keys['d']) playerModel.position.addScaledVector(right, moveSpeed);
+                tempPlayerPosition.copy(playerModel.position);
+
+                if (keys['w']) tempPlayerPosition.addScaledVector(forward, moveSpeed);
+                if (keys['s']) tempPlayerPosition.addScaledVector(forward, -moveSpeed);
+                if (keys['a']) tempPlayerPosition.addScaledVector(right, -moveSpeed);
+                if (keys['d']) tempPlayerPosition.addScaledVector(right, moveSpeed);
+
+                // Movement sirf tab hoga jab collision nahi hogi
+                if (!checkCollision(tempPlayerPosition)) {
+                    playerModel.position.copy(tempPlayerPosition);
+                }
 
                 camera.position.x = playerModel.position.x;
                 camera.position.z = playerModel.position.z;
                 camera.position.y = playerModel.position.y + 1.6;
-
-                // Old goal logic removed, will be added back later
             }
 
             if (controls instanceof THREE.DeviceOrientationControls) {
